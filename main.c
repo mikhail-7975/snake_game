@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define FIELD_WIDTH 30
+#define FIELD_HEIGHT 30
+#define MAX_SNAKE_LEN (FIELD_WIDTH * FIELD_HEIGHT)
+
+typedef enum {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+} direction;
+
+typedef struct {
+    int width;
+    int height;
+} field;
+
+typedef struct {
+    int len;
+    int coords_xy[MAX_SNAKE_LEN * 2];
+} snake;
+
+typedef struct {
+    int x;
+    int y;
+} apple;
+
+typedef struct {
+    char data[(FIELD_WIDTH + 1) * (FIELD_HEIGHT + 1)];
+} display;
+
+void move_snake(snake* s, direction dir) {
+    if (dir == UP) {
+        s->coords_xy[1] -= 1;
+    } else if (dir == DOWN) {
+        s->coords_xy[1] += 1;
+    } else if (dir == LEFT) {
+        s->coords_xy[0] -= 1;
+    } else if (dir == RIGHT) {
+        s->coords_xy[0] += 1;
+    } else {
+        printf("UNCNOWN DIRECTION");
+    }
+    for (int i = 2; i < s->len; i += 2) {
+        s->coords_xy[i] = s->coords_xy[i + 2];   
+        s->coords_xy[i + 1] = s->coords_xy[i + 1 + 2];   
+    }
+}
+
+void render(display* d, snake* s, apple* a, field* f) {
+    // render field
+    for (int y = 0; y < FIELD_HEIGHT; y++) {
+        if ((y == 0) || (y == FIELD_HEIGHT - 1)) {
+            for (int x = 0; x < FIELD_WIDTH; x++) {
+                d->data[y * FIELD_WIDTH + x] = '#';
+            }
+        } else {
+            d->data[y * FIELD_WIDTH] = '#';
+            for (int x = 1; x < FIELD_WIDTH - 1; x++) {
+                d->data[y * FIELD_WIDTH + x] = ' ';
+            }
+            d->data[y * FIELD_WIDTH + FIELD_WIDTH - 1] = '#';
+        }
+    }
+
+    // render snake
+    for (int i = 0; i < s->len; i++) {
+        int y = s->coords_xy[2 * i];
+        int x = s->coords_xy[2 * i + 1];
+        printf("xy[%d] = (%d, %d)\n", i, x, y);
+        d->data[y * FIELD_WIDTH + x] = 's';
+    }
+
+    // render apple
+}
+
+void show(display* d) {
+    for (int coord_x = 0; coord_x < FIELD_WIDTH; coord_x++) {
+        for (int coord_y = 0; coord_y < FIELD_HEIGHT; coord_y++) {
+            printf("%c", d->data[coord_y * FIELD_WIDTH + coord_x]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    const int init_snake_len = 5;
+    int init_snake_coords[init_snake_len * 2] = {15, 15, 15, 16, 15, 17, 16, 17, 17, 17}; // in {(x, y), (x, y)} format 
+
+    snake S;
+    S.len = init_snake_len;
+    memcpy(&S.coords_xy, init_snake_coords, init_snake_len * 2 * sizeof(int));
+    field F;
+    display D;
+    apple A;
+    int n = 0;
+    while(1) {
+        n++;
+        if (n > 3) {
+            break;
+        }
+        printf("n = %d\n", n);
+        render(&D, &S, &A, &F);
+        show(&D);
+        // system("clear");
+    }
+    // move_snake(UP);
+}
