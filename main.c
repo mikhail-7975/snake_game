@@ -32,7 +32,16 @@ typedef struct {
     char data[(FIELD_WIDTH + 1) * (FIELD_HEIGHT + 1)];
 } display;
 
-void move_snake(snake* s, direction dir) {
+void move_snake(snake* s, direction dir) {    
+    for (int i = s->len - 1; i > 0; i--) {
+        int x_idx_next = 2 * i;
+        int x_idx_prev = 2 * (i - 1);
+        int y_idx_next = 2 * i + 1;
+        int y_idx_prev = 2 * (i - 1) + 1;
+        s->coords_xy[x_idx_next] = s->coords_xy[x_idx_prev];   
+        s->coords_xy[y_idx_next] = s->coords_xy[y_idx_prev];   
+    }
+
     if (dir == UP) {
         s->coords_xy[1] -= 1;
     } else if (dir == DOWN) {
@@ -44,10 +53,12 @@ void move_snake(snake* s, direction dir) {
     } else {
         printf("UNCNOWN DIRECTION");
     }
-    for (int i = 2; i < s->len; i += 2) {
-        s->coords_xy[i] = s->coords_xy[i + 2];   
-        s->coords_xy[i + 1] = s->coords_xy[i + 1 + 2];   
-    }
+}
+
+int check_apple_eat(snake* s, apple* a) {
+    int snake_head_x = s->coords_xy[0];
+    int snake_head_y = s->coords_xy[1];
+    return (a->x == snake_head_x && a->y == snake_head_y);
 }
 
 void render(display* d, snake* s, apple* a, field* f) {
@@ -67,10 +78,12 @@ void render(display* d, snake* s, apple* a, field* f) {
     }
 
     // render snake
-    for (int i = 0; i < s->len; i++) {
+    int y = s->coords_xy[0];
+    int x = s->coords_xy[1];
+    d->data[y * FIELD_WIDTH + x] = 'O';
+    for (int i = 1; i < s->len; i++) {
         int y = s->coords_xy[2 * i];
         int x = s->coords_xy[2 * i + 1];
-        printf("xy[%d] = (%d, %d)\n", i, x, y);
         d->data[y * FIELD_WIDTH + x] = 's';
     }
 
@@ -88,7 +101,7 @@ void show(display* d) {
 
 int main() {
     const int init_snake_len = 5;
-    int init_snake_coords[init_snake_len * 2] = {15, 15, 15, 16, 15, 17, 16, 17, 17, 17}; // in {(x, y), (x, y)} format 
+    int init_snake_coords[init_snake_len * 2] = {15, 15, 15, 16, 16, 16, 16, 17, 17, 16}; // in {(x, y), (x, y)} format 
 
     snake S;
     S.len = init_snake_len;
@@ -97,12 +110,28 @@ int main() {
     display D;
     apple A;
     int n = 0;
+    
+    while(1) {
+        n++;
+        if (n > 5) {
+            break;
+        }
+        printf("n = %d\n", n);
+        move_snake(&S, UP);
+        render(&D, &S, &A, &F);
+        show(&D);
+        system("pause");
+        // system("clear");
+    }
+    printf("NOW LEFT\n");
+    n = 0;
     while(1) {
         n++;
         if (n > 3) {
             break;
         }
         printf("n = %d\n", n);
+        move_snake(&S, LEFT);
         render(&D, &S, &A, &F);
         show(&D);
         // system("clear");
